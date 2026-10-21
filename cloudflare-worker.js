@@ -1,5 +1,5 @@
 // ============================================================
-// نطق مصطلح v4.0 — پایگاه دانش جامع (۲۰ حوزه تخصصی)
+// نطق مصطلح v5.1 — پایگاه دانش جامع (۲۵ حوزه تخصصی)
 // ============================================================
 
 // ---------- نرمال‌سازی فارسی ----------
@@ -937,7 +937,7 @@ function getHomePage() {
     return `<!DOCTYPE html>
 <html lang="fa" dir="rtl"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>نطق مصطلح v4.0 — ۲۰ حوزه تخصصی</title>
+<title>نطق مصطلح v5.1 — ۲۵ حوزه تخصصی</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
 body{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;direction:rtl}
@@ -959,10 +959,10 @@ input[type=text]:focus{outline:none;border-color:#667eea}
 button{padding:14px 28px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
 button:disabled{opacity:.5;cursor:not-allowed}
 </style></head><body><div class="container">
-<div class="header"><h1>🧠 نطق مصطلح v4.0</h1><p>۲۰ حوزه تخصصی — تحلیل هوشمند فارسی</p></div>
+<div class="header"><h1>🧠 نطق مصطلح v5.1</h1><p>۲۵ حوزه تخصصی — تحلیل هوشمند فارسی</p></div>
 <div class="domains" id="domainList"></div>
 <div class="chat" id="chatBox">
-<div class="bot"><strong>سیستم پیشرفته فعال! 🚀</strong>\n۲۰ حوزه تخصصی در اختیار شماست. یک سؤال بپرسید یا روی یکی از حوزه‌های بالا کلیک کنید.\n\n📢 توجه: این سیستم راهنمای عمومی است و جایگزین مشاوره تخصصی (پزشکی، روان‌شناختی، مالی، حقوقی) نیست.</div>
+<div class="bot"><strong>سیستم پیشرفته فعال! 🚀</strong>\n۲۵ حوزه تخصصی در اختیار شماست. یک سؤال بپرسید یا روی یکی از حوزه‌های بالا کلیک کنید.\n\n📢 توجه: این سیستم راهنمای عمومی است و جایگزین مشاوره تخصصی (پزشکی، روان‌شناختی، مالی، حقوقی) نیست.</div>
 </div>
 <div class="input-area">
 <input type="text" id="q" placeholder="سؤال خود را بپرسید...">
