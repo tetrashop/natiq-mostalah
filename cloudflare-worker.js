@@ -17,6 +17,71 @@ function normalizePersian(text) {
         .toLowerCase();
 }
 
+
+// ---------- ریشه‌یاب فارسی ----------
+function stemPersian(word) {
+    let w = word;
+    w = w.replace(/^(نمی|می)/, '');
+    const sufs = ['هایی','های','ترین','تر','ها','اند','ایم','اید','است','یم','ید','ند','ام','ای'];
+    for (const s of sufs) {
+        if (w.length - s.length >= 3 && w.endsWith(s)) { w = w.slice(0, -s.length); break; }
+    }
+    return w.length >= 2 ? w : word;
+}
+
+// ---------- Levenshtein ----------
+function levenshtein(a, b) {
+    if (a === b) return 0;
+    const la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > 2) return 3;
+    const dp = [];
+    for (let i = 0; i <= la; i++) dp[i] = [i];
+    for (let j = 0; j <= lb; j++) dp[0][j] = j;
+    for (let i = 1; i <= la; i++) {
+        for (let j = 1; j <= lb; j++) {
+            dp[i][j] = a[i-1] === b[j-1]
+                ? dp[i-1][j-1]
+                : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+        }
+    }
+    return dp[la][lb];
+}
+
+// ---------- مترادف‌ها ----------
+const SYNONYMS = {
+    'شغل': ['کار','حرفه'], 'کار': ['شغل','حرفه'], 'حرفه': ['شغل','کار'],
+    'کسب': ['بیزینس','استارتاپ'], 'بیزینس': ['کسب','استارتاپ'],
+    'استرس': ['فشار','اضطراب','نگرانی'], 'اضطراب': ['استرس','نگرانی'],
+    'غم': ['ناراحتی','افسردگی'], 'ناراحتی': ['غم','افسردگی'],
+    'پول': ['مالی','درامد','سرمایه'], 'مالی': ['پول','سرمایه'], 'درامد': ['پول','مالی'],
+    'کتاب': ['مطالعه','یادگیری'], 'مطالعه': ['کتاب','یادگیری'],
+    'ورزش': ['تناسب','فیتنس','تمرین'], 'تناسب': ['ورزش','فیتنس'],
+    'رژیم': ['تغذیه','غذا'], 'غذا': ['تغذیه','رژیم'],
+    'همسر': ['شریک','ازدواج'], 'ازدواج': ['همسر','شریک'],
+    'فرزند': ['بچه','کودک'], 'بچه': ['فرزند','کودک'], 'کودک': ['فرزند','بچه'],
+    'مدیر': ['رهبر','سرپرست'], 'رهبر': ['مدیر','لیدر'],
+    'خشم': ['عصبانیت','هیجان'], 'عصبانیت': ['خشم','هیجان'],
+    'اعتماد': ['عزت','خودباوری'],
+    'تمرکز': ['حواس','توجه'], 'خواب': ['استراحت','بازیابی']
+};
+
+function expandWithSynonyms(text) {
+    const tokens = text.split(' ');
+    const extras = [];
+    for (const t of tokens) {
+        if (SYNONYMS[t]) extras.push(...SYNONYMS[t]);
+    }
+    return extras.length ? text + ' ' + extras.join(' ') : text;
+}
+
+function matchWord(token, keyword) {
+    if (token === keyword) return 3;
+    if (token.length >= 2 && keyword.length >= 2 && stemPersian(token) === stemPersian(keyword)) return 2;
+    if (token.length >= 3 && keyword.length >= 3 && levenshtein(token, keyword) <= 1) return 1;
+    return 0;
+}
+
+
 // ---------- تشخیص نوع سؤال ----------
 function detectQuestionType(n) {
     if (/(چیست|چیه|معنی|تعریف|یعنی چه|چی هست)/.test(n)) return 'definition';
@@ -650,18 +715,151 @@ response: `📌 **تعریف:** رهبری یعنی ایجاد شرایطی که
 💡 **تمرین این هفته:** با هر عضو تیم، یک جلسه ۳۰ دقیقه‌ای. سؤال اول: «این هفته چطور می‌توانم کار تو را آسان‌تر کنم؟».
 
 📚 **منابع:** The Manager's Path، Radical Candor، Dare to Lead.`
+},{
+name: 'زبان‌آموزی', depth: 4,
+keywords: ['زبان','انگلیسی','عربی','فرانسه','المانی','زبان اموزی','یادگیری زبان','english','language','لغت','مکالمه','تلفظ','گرامر','واژگان'],
+response: `📌 **تعریف:** یادگیری زبان = ورودی زیاد + تمرین فعالانه + تکرار فاصله‌دار.
+
+🎯 **چهار ستون:**
+
+۱. **ورودی** — ۳۰-۶۰ دقیقه در روز: پادکست، سریال با زیرنویس، کتاب ساده. ۸۰٪ زمان یادگیری باید ورودی باشد.
+
+۲. **واژگان** — روزی ۱۰ کلمه با Anki (تکرار فاصله‌دار). کلمات را در جمله یاد بگیرید.
+
+۳. **مکالمه** — از هفته اول شروع کنید. سکوت، دشمن یادگیری است.
+
+۴. **گرامر** — کم، ولی منظم. یک درس در هفته + تمرین.
+
+⏰ **جدول روزانه ۳۰ دقیقه:**
+• ۱۰ دقیقه Anki
+• ۱۰ دقیقه گوش دادن
+• ۱۰ دقیقه صحبت کردن
+
+⚠️ **اشتباهات رایج:**
+• تمرکز فقط بر گرامر
+• انتظار روانی در ۳ ماه
+• پرهیز از مکالمه تا «کامل شدن»
+
+💡 **تمرین این هفته:** روزی ۱۰ کلمه در Anki، روزی ۱۰ دقیقه پادکست ساده.`
+},{
+name: 'سفر و گردشگری', depth: 3,
+keywords: ['سفر','گردشگری','مسافرت','تور','بلیط','هتل','ویزا','passport','travel','مسافر','تفریح','جهانگردی','راهنمای سفر'],
+response: `📌 **تعریف:** سفر خوب = برنامه‌ریزی متعادل + بودجه واقع‌بینانه + انعطاف.
+
+🎯 **پنج گام:**
+
+۱. **انتخاب مقصد** — سه معیار: بودجه، زمان، علاقه (طبیعت/فرهنگ/شهر).
+
+۲. **بودجه** — پرواز + اقامت + غذا + فعالیت + ۲۰٪ ذخیره.
+
+۳. **اقامت** — هتل/هاستل/Airbnb. برای سفر طولانی، آشپزخانه‌دار صرفه‌جویی می‌کند.
+
+۴. **برنامه روزانه** — روزی ۲-۳ فعالیت اصلی، نه ۶-۷.
+
+۵. **بیمه سفر** — برای خارج ضروری، برای فعالیت‌های پرخطر ضروری.
+
+✈️ **چک‌لیست:**
+• مدارک (پاسپورت، ویزا)
+• بیمه
+• ارز + کارت
+• شارژر و مبدل
+• داروهای ضروری
+• کپی مدارک
+
+⚠️ **اشتباهات رایج:**
+• برنامه خیلی فشرده
+• بودجه بدون ذخیره
+• فراموشی بیمه
+
+💡 **تمرین این هفته:** مقصد بعدی را مشخص کنید و بودجه‌اش را تخمین بزنید.`
+},{
+name: 'هنر و خلاقیت', depth: 4,
+keywords: ['هنر','خلاقیت','خلاق','نقاشی','موسیقی','شعر','نویسندگی','داستان','creative','art','music','طراحی','عکاسی','ساخت','ایده'],
+response: `📌 **تعریف:** خلاقیت = ترکیب ایده‌های موجود به شکل تازه، نه تولید از هیچ.
+
+🎨 **پنج عادت خلاقیت:**
+
+۱. **مصرف** — روزانه ۳۰ دقیقه هنر مصرف کنید: کتاب، فیلم، موسیقی، موزه.
+
+۲. **تمرین روزانه** — ۱۵ دقیقه نوشتن آزاد، طراحی، یا نوازندگی. مقدار مهم نیست، تکرار مهم است.
+
+۳. **دفتر ایده** — هر ایده‌ای که رسید، بنویسید.
+
+۴. **شکستن قالب** — گاهی عمداً «غلط» کار کنید.
+
+۵. **نمایش** — به دیگران نشان دهید. نقد، خلاقیت را تیز می‌کند.
+
+🎭 **برای شروع:**
+• نقاشی: روزی ۱۰ دقیقه، هر چه در ذهن است
+• نویسندگی: روزی ۳۰۰ کلمه، آزاد
+• موسیقی: روزی ۱۵ دقیقه تمرین
+• عکاسی: روزی ۳ عکس با موضوع مشخص
+
+⚠️ **اشتباهات رایج:**
+• انتظار شاهکار از روز اول
+• مقایسه با حرفه‌ای‌ها
+• کمال‌گرایی
+
+💡 **تمرین این هفته:** یک دفتر ایده بخرید، هر روز ۳ ایده بنویسید.`
+},{
+name: 'مشارکت اجتماعی و مدنی', depth: 3,
+keywords: ['مشارکت','اجتماعی','مدنی','خیریه','داوطلب','کمک','جامعه','civil','volunteer','social','خیر','انجمن','همیاری'],
+response: `📌 **تعریف:** مشارکت اجتماعی = عمل آگاهانه برای بهبود جامعه، نه لزوماً سیاست.
+
+🤝 **پنج شکل مشارکت:**
+
+۱. **داوطلبی** — هفته‌ای ۲ ساعت در یک خیریه، مدرسه، بیمارستان.
+
+۲. **اهدا** — پول، کتاب، لباس، خون.
+
+۳. **آگاهی‌بخشی** — محتوای آموزشی، کارگاه.
+
+۴. **مشارکت محلی** — شورای محله، پاکسازی پارک، درختکاری.
+
+۵. **حمایت از کسب‌وکار محلی** — خرید از تولیدکنندگان کوچک.
+
+🎯 **چطور شروع؟**
+۱. علاقه‌تان را مشخص کنید
+۲. یک سازمان محلی پیدا کنید
+۳. با یک تعهد کوچک شروع کنید
+۴. ۳ ماه ادامه دهید، سپس بازبینی
+
+⚠️ **اشتباهات رایج:**
+• تعهد زیاد، خستگی سریع
+• کمک بدون پرسیدن نیاز واقعی
+• فراموشی مراقبت از خود
+
+💡 **تمرین این هفته:** یک سازمان محلی پیدا کنید و با آن‌ها تماس بگیرید.`
 }
 ];
 
 // ---------- تطبیق ----------
 function scoreDomain(n, domain) {
+    const expanded = expandWithSynonyms(n);
+    const allTokens = expanded.split(' ');
     let score = 0;
     for (const kw of domain.keywords) {
         const nkw = normalizePersian(kw);
         if (nkw.length < 2) continue;
-        if (n.includes(nkw)) {
+        let matched = false;
+        if (nkw.length <= 3) {
+            const idx = n.indexOf(nkw);
+            if (idx >= 0) {
+                const before = idx === 0 ? ' ' : n[idx - 1];
+                if (before === ' ' || idx === 0) matched = true;
+            }
+        } else if (n.includes(nkw)) {
+            matched = true;
+        }
+        if (matched) {
             const words = nkw.split(' ').length;
             score += Math.min(4, words + 1);
+            continue;
+        }
+        for (const tok of allTokens) {
+            if (tok.length < 2) continue;
+            const m = matchWord(tok, nkw);
+            if (m > 0) { score += m; break; }
         }
     }
     return score;
@@ -683,7 +881,8 @@ function analyzeQuestion(rawQuestion) {
             response: best.d.response,
             confidence: Math.min(1, best.s / 6),
             questionType,
-            relatedDomains: related
+            relatedDomains: related,
+            allScores: scores.slice(0, 5).map(x => ({ name: x.d.name, score: x.s }))
         };
     }
 
@@ -695,7 +894,8 @@ function analyzeQuestion(rawQuestion) {
         response: buildFallback(n, near),
         confidence: 0,
         questionType,
-        suggestedDomains: near.length > 0 ? near : DOMAINS.slice(0, 6).map(d => d.name)
+        suggestedDomains: near.length > 0 ? near : DOMAINS.slice(0, 6).map(d => d.name),
+        allScores: scores.slice(0, 5).map(x => ({ name: x.d.name, score: x.s }))
     };
 }
 
@@ -828,7 +1028,7 @@ export default {
         if (url.pathname === '/api/health') {
             return new Response(JSON.stringify({
                 status: 'healthy',
-                version: '4.0.0',
+                version: '5.1.0',
                 domains_count: DOMAINS.length,
                 domains: DOMAINS.map(d => d.name),
                 timestamp: new Date().toISOString()
@@ -841,6 +1041,30 @@ export default {
                 count: DOMAINS.length,
                 domains: DOMAINS.map(d => ({ name: d.name, depth: d.depth, keywords_count: d.keywords.length }))
             }), { headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors } });
+        }
+
+        if (url.pathname === '/api/analyze' && request.method === 'POST') {
+            try {
+                const body = await request.json();
+                const question = body && body.question;
+                if (!question) return new Response(JSON.stringify({ error: 'question required' }), { status: 400, headers: { 'Content-Type': 'application/json', ...cors } });
+                const a = analyzeQuestion(question);
+                return new Response(JSON.stringify({
+                    success: true,
+                    question,
+                    normalized: normalizePersian(question),
+                    analysis: {
+                        primaryConcept: a.concept,
+                        matched: a.matched,
+                        confidence: a.confidence,
+                        questionType: a.questionType,
+                        allScores: a.allScores || [],
+                        relatedDomains: a.relatedDomains || []
+                    }
+                }), { headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors } });
+            } catch (err) {
+                return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json', ...cors } });
+            }
         }
 
         if (request.method === 'POST' && (url.pathname === '/' || url.pathname === '/api/ask')) {
@@ -872,7 +1096,7 @@ export default {
                         suggestedDomains: analysis.suggestedDomains || []
                     },
                     metadata: {
-                        version: '4.0.0',
+                        version: '5.1.0',
                         timestamp: new Date().toISOString()
                     }
                 }), { headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors } });
